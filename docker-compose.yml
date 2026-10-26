@@ -1,0 +1,58 @@
+services:
+  waha:
+    image: devlikeapro/waha:latest
+    container_name: waha
+    restart: unless-stopped
+    env_file: [.env]
+    volumes:
+      # Estado de autenticação do WhatsApp. Fica na máquina que executa, e
+      # nunca no repositório nem na imagem.
+      - ./sessions:/app/.sessions
+    networks: [chatbot]
+    # A porta fica presa ao loopback: o dashboard e a API da WAHA continuam
+    # acessíveis da própria máquina (ou por túnel SSH), mas não da rede.
+    # O bot não usa esta porta — fala com a WAHA por dentro da rede do Compose.
+    ports:
+      - "127.0.0.1:3000:3000"
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: unless-stopped
+    # Sem portas publicadas: só o bot precisa alcançar o Redis.
+    networks: [chatbot]
+    command: >
+      redis-server
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --save ""
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  bot:
+    build: .
+    container_name: bot
+    restart: unless-stopped
+    env_file: [.env]
+    environment:
+      - REDIS_HOST=redis
+      - WAHA_URL=http://waha:3000
+      - FLOW_PATH=${FLOW_PATH:-flows/example.yml}
+    depends_on:
+      redis:
+        condition: service_healthy
+      waha:
+        condition: service_started
+    networks: [chatbot]
+    # O webhook é chamado pela WAHA por dentro da rede (http://bot:8000/webhook).
+    # Publique esta porta apenas se o provedor for externo — e então exija
+    # WEBHOOK_SECRET e coloque HTTPS na frente.
+    # ports:
+    #   - "127.0.0.1:8000:8000"
+
+networks:
+  chatbot:
+    driver: bridge
