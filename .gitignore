@@ -1,0 +1,28 @@
+# Segredos
+.env
+.env.*
+!.env.example
+
+# Estado de autenticação do WhatsApp. Quem tiver esta pasta consegue se passar
+# pelo número conectado: nunca deve ser versionada nem entrar numa imagem.
+sessions/
+.sessions/
+
+# Fluxos com conteúdo interno de uma empresa: nomeie como *.local.yml para
+# mantê-los fora do versionamento.
+flows/*.local.yml
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# Editores e SO
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

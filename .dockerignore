@@ -1,0 +1,19 @@
+# O Dockerfile faz COPY . . — sem este arquivo, .env e sessions/ entrariam na
+# imagem e ficariam recuperáveis com docker history.
+.env
+.env.*
+sessions/
+.sessions/
+
+.git/
+.gitignore
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+tests/
+requirements-dev.txt
+README*.md
+.vscode/
+.idea/

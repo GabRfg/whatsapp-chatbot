@@ -1,0 +1,8 @@
+# Normaliza as quebras de linha no repositório. Sem isto, um clone no Windows
+# com autocrlf pode gravar CRLF no Dockerfile e nos arquivos do container, e
+# shell scripts com CRLF não executam no Linux.
+* text=auto eol=lf
+
+# Arquivos que o GitHub não deve contar na estatística de linguagens nem
+# expandir por padrão no diff.
+flows/*.yml linguist-detectable=true
