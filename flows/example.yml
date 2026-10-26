@@ -1,0 +1,107 @@
+# Fluxo de exemplo.
+#
+# Tudo o que o bot diz está neste arquivo. Para atender outra empresa, copie-o,
+# troque os textos e aponte FLOW_PATH para a cópia — nenhuma linha de Python
+# precisa mudar.
+#
+# Conceitos:
+#   states      cada ponto da conversa
+#   options     o que o usuário pode digitar naquele ponto
+#   next        para onde ir depois ("handoff" entrega a um atendente humano)
+#
+# O arquivo é validado na subida: opção apontando para estado inexistente,
+# estado órfão ou campo desconhecido impedem o container de iniciar.
+
+version: 1
+
+bot:
+  name: "Acme Suporte"
+  session: default
+
+  # Estado em que todo usuário novo entra.
+  entrypoint: menu
+
+  # Por quanto tempo o estado do usuário sobrevive sem interação (segundos).
+  state_ttl: 3600
+
+  # Funcionam de qualquer ponto, inclusive durante o atendimento humano.
+  # São a única saída do handoff.
+  reset_keywords: ["menu", "iniciar", "início", "0", "/menu"]
+
+  # Anexado ao fim das respostas, exceto no menu principal.
+  back_hint: "\n\n_(Digite *menu* para voltar às opções)_"
+
+  # Quando nada corresponde.
+  fallback: "Não entendi essa opção. Digite *menu* para ver a lista."
+
+  # Quando chega áudio, imagem, figurinha ou localização.
+  unsupported_media: "Recebi seu arquivo, mas aqui só consigo ler texto. Digite *menu* para ver as opções."
+
+states:
+  menu:
+    text: |
+      Olá! Bem-vindo ao atendimento da *Acme*.
+
+      Consulte nossas dúvidas frequentes:
+      https://exemplo.com.br/faq
+
+      Digite o número da opção desejada:
+      1️⃣ Suporte técnico
+      2️⃣ Comercial e orçamentos
+      3️⃣ Segunda via de boleto
+      4️⃣ Problemas com pedidos
+      5️⃣ Falar com um atendente
+    options:
+      # Resposta própria e entrega a um humano.
+      "1":
+        label: "Suporte técnico"
+        text: "Descreva o problema que está enfrentando, com o máximo de detalhes. Um técnico assumirá a conversa."
+        next: handoff
+
+      "2":
+        label: "Comercial"
+        text: "Informe o nome da sua empresa e o que você procura. Nossa equipe comercial responderá em seguida."
+        next: handoff
+
+      # Só informa e mantém o usuário no menu: nenhum humano é acionado.
+      "3":
+        label: "Segunda via"
+        text: "Emita a segunda via pelo portal: https://exemplo.com.br/boletos"
+        next: menu
+
+      # Abre um submenu, que envia o próprio texto ao ser alcançado.
+      "4":
+        label: "Pedidos"
+        next: pedidos
+
+      "5":
+        label: "Atendente"
+        text: "Certo! Em instantes um atendente assume esta conversa."
+        next: handoff
+
+  pedidos:
+    text: |
+      *Problemas com pedidos.* Escolha uma opção:
+      4.1 - Pedido não entregue
+      4.2 - Produto com defeito
+      4.3 - Cancelamento ou troca
+    options:
+      "4.1":
+        text: "Informe o número do pedido e a data prevista de entrega."
+        next: handoff
+      "4.2":
+        text: "Informe o número do pedido e descreva o defeito. Se possível, tenha a nota fiscal em mãos."
+        next: handoff
+      "4.3":
+        text: "Prazos e condições de troca: https://exemplo.com.br/trocas"
+        next: pedidos
+
+# Sobre `next: handoff`
+#
+# "handoff" é um estado embutido no motor e não se declara aqui. Ao alcançá-lo,
+# o bot silencia e deixa a conversa com o atendente humano: nada do que o
+# usuário escrever recebe resposta automática. A única saída é uma das
+# reset_keywords, o que evita que o bot interrompa um atendimento em andamento.
+#
+# Para dar outro nome a esse comportamento, declare um estado próprio com
+# `handoff: true` e aponte `next` para ele.
